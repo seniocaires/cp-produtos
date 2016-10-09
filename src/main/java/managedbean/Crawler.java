@@ -13,6 +13,7 @@ import javax.faces.bean.ManagedBean;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import com.sporeon.framework.excecao.ValidacaoException;
 
@@ -140,7 +141,8 @@ public class Crawler {
   private void induzirSleepCrawler() {
     try {
       adicionarLog(TipoLog.INFO, "Induzindo sleep do crawler.");
-      Thread.sleep((60 * 1000) * 5);
+//      Thread.sleep((60 * 1000) * 5);
+      Thread.sleep((5 * 1000) * 1);
     } catch (InterruptedException e) {
       adicionarLog(TipoLog.ERROR, e.getMessage());
     }
@@ -240,8 +242,12 @@ public class Crawler {
   public boolean existePaginaSeguinte(Document pagina) {
 
     try {
-      pagina.getElementsByClass("Next").get(0);
-      return true;
+      Element btNext = pagina.select("li[class=next next_page").get(0);
+      if ("next next_page".equals(btNext.attr("class").trim())) {
+        return true;
+      } else {
+        return false;
+      }
     } catch (Exception e) {
       return false;
     }
