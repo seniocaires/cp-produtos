@@ -11,10 +11,9 @@ services:
     restart: always
   webserver:
     build:
-      context: ./cp-produtos-webserver
+      context: .
+      dockerfile: Dockerfile-webserver
     image: cp-produtos-webserver
-    volumes:
-      - ./:/tmp
     links:
     - database:cp-produtos-database
     ports:

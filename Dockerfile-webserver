@@ -1,0 +1,15 @@
+FROM seniocaires/apache-tomee-plume
+MAINTAINER Senio Caires <seniocaires@gmail.com>
+
+ADD cp-produtos-webserver/tomee/tomcat-users.xml /opt/apache-tomee-plume-1.7.4/conf/
+ADD cp-produtos-webserver/tomee/tomee.xml /opt/apache-tomee-plume-1.7.4/conf/
+ADD cp-produtos-webserver/tomee/mysql-connector-java-5.1.36-bin.jar /opt/apache-tomee-plume-1.7.4/lib/
+
+RUN apt-get update && apt-get install -y maven
+
+RUN mkdir /tmp/app
+
+ADD . /tmp/app
+
+RUN cd /tmp/app && mvn clean install && cp /tmp/app/target/cp-produtos.war /opt/apache-tomee-plume-1.7.4/webapps
+
