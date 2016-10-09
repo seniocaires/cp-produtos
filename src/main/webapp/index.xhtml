@@ -27,7 +27,17 @@
         <p:messages id="mensagens" showDetail="true" autoUpdate="true" closable="true"/>
       </div>
 
-    </h:form>
+      <h:panelGroup id="painel">
+        <p:commandButton actionListener="#{crawler.iniciar}" value="Iniciar" disabled="#{crawler.crawlerRodando}" update="painel" />
+        <p:commandButton actionListener="#{crawler.parar}" value="Parar" disabled="#{!crawler.crawlerRodando and crawler.cleanerRodando}" update="painel" />
+      </h:panelGroup>
+
+      <div class="panel-body">
+        <h:outputText id="log" value="#{crawler.logString}" escape="false"/>
+        <p:poll interval="2" listener="#{crawler.stub}" update="log" />
+      </div>
+
+  </h:form>
 
   </h:body>
 

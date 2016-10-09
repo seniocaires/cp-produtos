@@ -77,7 +77,7 @@ public class PaginaService implements PaginaServiceLocal {
     } catch (NoResultException nre) {
       retorno = new Pagina();
     } catch (Exception e) {
-      Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage());
+      Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
       retorno = new Pagina();
     }
 

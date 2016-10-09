@@ -178,8 +178,8 @@ public class Crawler {
 
       try {
 
-        adicionarLog(TipoLog.INFO, "Acessando página de listagem: " + ultimaPaginaListagemMarcaAcessada.getLink());
-        documentPaginaListagemMarca = Jsoup.connect(ultimaPaginaListagemMarcaAcessada.getLink()).timeout(6000 * 1000).get();
+        adicionarLog(TipoLog.INFO, "Acessando pagina de listagem: " + ultimaPaginaListagemMarcaAcessada.getLink());
+        documentPaginaListagemMarca = Jsoup.connect(ultimaPaginaListagemMarcaAcessada.getLink()).timeout(6000 * 1000).userAgent("Chrome").get();
 
         //        for (Element elementProdutoPaginaListagem : buscarProdutos(documentPaginaListagemMarca)) {
         //
@@ -200,16 +200,16 @@ public class Crawler {
           try {
             paginaService.salvar(ultimaPaginaListagemMarcaAcessada);
           } catch (ValidacaoException e) {
-            adicionarLog(TipoLog.ERROR, "Erro ao salvar página de listagem de marca.");
-            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage());
+            adicionarLog(TipoLog.ERROR, "Erro ao salvar pagina de listagem de marca.");
+            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
           }
         } else {
           try {
-            adicionarLog(TipoLog.INFO, "Não existe próxima página de listagem de marca.");
+            adicionarLog(TipoLog.INFO, "Nao existe proxima pagina de listagem de marca.");
             paginaService.remover(ultimaPaginaListagemMarcaAcessada);
           } catch (ValidacaoException e) {
-            adicionarLog(TipoLog.ERROR, "Erro ao remover página de listagem de marca.");
-            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage());
+            adicionarLog(TipoLog.ERROR, "Erro ao remover pagina de listagem de marca.");
+            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
           }
         }
 
@@ -219,13 +219,13 @@ public class Crawler {
         induzirSleepCrawler();
 
       } catch (IOException e) {
-        adicionarLog(TipoLog.ERROR, "Erro ao carregar página de listagem de marca.");
+        adicionarLog(TipoLog.ERROR, "Erro ao carregar pagina de listagem de marca.");
         existePaginaListagemSeguinte = false;
-        Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage());
+        Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
       } catch (Exception e) {
-        adicionarLog(TipoLog.ERROR, "Erro desconhecido na página de listagem de marca.");
+        adicionarLog(TipoLog.ERROR, "Erro desconhecido na pagina de listagem de marca.");
         existePaginaListagemSeguinte = false;
-        Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage());
+        Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
       }
 
     } while (existePaginaListagemSeguinte);

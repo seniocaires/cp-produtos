@@ -23,7 +23,7 @@ import enumeracao.TipoPagina;
  * @author Senio Caires
  */
 @Entity
-@Table(name = "pagina", schema = "cp-produto")
+@Table(name = "pagina")
 public class Pagina {
 
   /**
