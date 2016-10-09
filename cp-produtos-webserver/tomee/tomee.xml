@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tomee>
+
+  <Resource id="cp-produtos-DataSource" type="DataSource">
+    JdbcDriver com.mysql.jdbc.Driver
+    JdbcUrl jdbc:mysql://cp-produtos-database:3306/cpprodutosdb
+    UserName cpprodutos
+    Password cpprodutospassword
+    JtaManaged true
+    LogSql true
+  </Resource>
+
+  <Resource id="cp-produtos-DataSourceNonJta" type="DataSource">
+    JdbcDriver com.mysql.jdbc.Driver
+    JdbcUrl jdbc:mysql://cp-produtos-database:3306/cpprodutosdb
+    UserName cpprodutos
+    Password cpprodutospassword
+    JtaManaged false
+    LogSql true
+  </Resource>
+
+</tomee>

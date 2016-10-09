@@ -1,0 +1,10 @@
+<persistence xmlns="http://java.sun.com/xml/ns/persistence" version="1.0">
+
+  <persistence-unit name="cp-produtos-unit">
+    <jta-data-source>cp-produtos-DataSource</jta-data-source>
+    <non-jta-data-source>cp-produtos-DataSourceNonJta</non-jta-data-source>
+    <properties>
+      <property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema(ForeignKeys=true)" />
+    </properties>
+  </persistence-unit>
+</persistence>

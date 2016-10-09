@@ -1,0 +1,22 @@
+version: '2'
+services:
+  database:
+    build:
+      context: ./cp-produtos-database
+    image: cp-produtos-database
+    environment:
+      MYSQL_ROOT_PASSWORD: senha-root
+    ports:
+    - 3306:3306
+    restart: always
+  webserver:
+    build:
+      context: ./cp-produtos-webserver
+    image: cp-produtos-webserver
+    volumes:
+      - ./:/tmp
+    links:
+    - database:cp-produtos-database
+    ports:
+    - 8080:8080
+    restart: always
