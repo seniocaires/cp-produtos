@@ -1,6 +1,8 @@
 package managedbean;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -11,10 +13,13 @@ import javax.ejb.EJB;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
+import com.googlecode.htmlcompressor.compressor.HtmlCompressor;
 import com.sporeon.framework.excecao.ValidacaoException;
 
 import dominio.Pagina;
@@ -141,10 +146,11 @@ public class Crawler {
   private void induzirSleepCrawler() {
     try {
       adicionarLog(TipoLog.INFO, "Induzindo sleep do crawler.");
-//      Thread.sleep((60 * 1000) * 5);
+      //      Thread.sleep((60 * 1000) * 5);
       Thread.sleep((5 * 1000) * 1);
     } catch (InterruptedException e) {
       adicionarLog(TipoLog.ERROR, e.getMessage());
+      Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
     }
   }
 
@@ -183,11 +189,11 @@ public class Crawler {
         adicionarLog(TipoLog.INFO, "Acessando pagina de listagem: " + ultimaPaginaListagemMarcaAcessada.getLink());
         documentPaginaListagemMarca = Jsoup.connect(ultimaPaginaListagemMarcaAcessada.getLink()).timeout(6000 * 1000).userAgent("Chrome").get();
 
-        //        for (Element elementProdutoPaginaListagem : buscarProdutos(documentPaginaListagemMarca)) {
-        //
-        //          atualizarPagina(elementProdutoPaginaListagem.getElementsByTag("a").get(0).attr("href"), 1);
-        //          Runtime.getRuntime().gc();
-        //        }
+        for (Element elementMarcaPaginaListagem : buscarMarcas(documentPaginaListagemMarca)) {
+
+          atualizarPagina(elementMarcaPaginaListagem.getElementsByTag("a").get(0).attr("href"), 1);
+          Runtime.getRuntime().gc();
+        }
 
         /* Atualizando última página de listagem de marca */;
         ultimaPaginaListagemMarcaAcessada.setNumero(ultimaPaginaListagemMarcaAcessada.getNumero() + 1);
@@ -234,6 +240,87 @@ public class Crawler {
   }
 
   /**
+   * Atualiza a página.
+   * @author Senio Caires
+   * @param linkSemPaginacao - {@link String}
+   * @param numeroPagina - Primitive {@link Integer}
+   */
+  private void atualizarPagina(String linkSemPaginacao, int numeroPagina) {
+
+    Pagina paginaMarca;
+    Document documentPaginaMarca;
+
+    try {
+
+      /* Recuperando página ou criando uma nova. */
+      paginaMarca = paginaService.buscarPorLink(URLDecoder.decode("http://cosmos.bluesoft.com.br" + linkSemPaginacao + "/produtos?page=" + numeroPagina, "UTF-8"));
+      if (paginaMarca == null || paginaMarca.getId() == null) {
+        paginaMarca = new Pagina(URLDecoder.decode("http://cosmos.bluesoft.com.br" + linkSemPaginacao + "/produtos?page=" + numeroPagina, "UTF-8"));
+      }
+
+      /* Acessando página */
+      adicionarLog(TipoLog.INFO, "Acessando pagina da marca: " + paginaMarca.getLink());
+      documentPaginaMarca = Jsoup.connect(paginaMarca.getLink()).timeout(6000 * 1000).userAgent("Chrome").get();
+
+      /* Atualizando conteúdo da página */
+      paginaMarca.setAtiva(true);
+      paginaMarca.setTipo(TipoPagina.MARCA);
+      paginaMarca.setDataAtualizacao(new Date());
+      paginaMarca.setNumero(numeroPagina);
+      paginaMarca.setHtml(getHtmlComprimido(paginaMarca.getLink()));
+
+      try {
+        paginaService.salvar(paginaMarca);
+      } catch (ValidacaoException ve) {
+        adicionarLog(TipoLog.ERROR, "Erro ao persistir pagina: " + paginaMarca.getLink());
+        Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, ve.getMessage(), ve);
+      }
+
+      if (existePaginaSeguinte(documentPaginaMarca)) {
+        atualizarPagina(linkSemPaginacao, ++numeroPagina);
+      }
+
+    } catch (UnsupportedEncodingException e) {
+      adicionarLog(TipoLog.ERROR, "Erro no encoding da url da pagina." + "http://cosmos.bluesoft.com.br" + linkSemPaginacao + "/produtos?page=" + numeroPagina);
+      Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
+    } catch (HttpStatusException hse) {
+      adicionarLog(TipoLog.WARNING, "Erro ao acessar pagina da marca." + "http://cosmos.bluesoft.com.br" + linkSemPaginacao + "/produtos?page=" + numeroPagina);
+      Logger.getLogger(this.getClass().getName()).log(Level.WARNING, hse.getMessage(), hse);
+    } catch (IOException e) {
+      adicionarLog(TipoLog.ERROR, "Erro ao carregar pagina." + "http://cosmos.bluesoft.com.br" + linkSemPaginacao + "/produtos?page=" + numeroPagina);
+      Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
+    } catch (Exception e) {
+      adicionarLog(TipoLog.ERROR, "Erro ao buscar pagina." + "http://cosmos.bluesoft.com.br" + linkSemPaginacao + "/produtos?page=" + numeroPagina);
+      Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Retorna a lista de marcas da página passada por parâmetro.
+   * @author Senio Caires
+   * @param pagina - {@link Document}
+   * @return Elements
+   */
+  public Elements buscarMarcas(Document pagina) {
+
+    Elements retorno;
+
+    try {
+
+      Element gradeMarcas = pagina.getElementsByClass("list-numbered").get(0);
+
+      retorno = gradeMarcas.getElementsByTag("li");
+
+    } catch (Exception e) {
+      adicionarLog(TipoLog.ERROR, "Erro ao buscar marca da pagina de listagem.");
+      Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
+      retorno = new Elements();
+    }
+
+    return retorno;
+  }
+
+  /**
    * Informa se existe próxima página.
    * @author Senio Caires
    * @param pagina - {@link Pagina}
@@ -270,6 +357,29 @@ public class Crawler {
     }
 
     return retorno;
+  }
+
+  /**
+   * Retorna o html da url passada por parâmetro.
+   * @author Senio Caires
+   * @param url - {@link String}
+   * @return {@link String}
+   */
+  private String getHtmlComprimido(String url) {
+
+    StringBuilder retorno = new StringBuilder();
+    HtmlCompressor compressor = new HtmlCompressor();
+    compressor.setCompressCss(true);
+    compressor.setCompressJavaScript(false);
+
+    try {
+      retorno.append(Jsoup.connect(url).timeout(6000 * 1000).userAgent("Chrome").get().html());
+    } catch (IOException e) {
+      adicionarLog(TipoLog.ERROR, "Erro ao acessar pagina e comprimir HTML.");
+      Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
+    }
+
+    return compressor.compress(retorno.toString());
   }
 
   /**

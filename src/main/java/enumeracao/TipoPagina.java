@@ -6,5 +6,6 @@ package enumeracao;
  */
 public enum TipoPagina {
 
-  LISTA_MARCA
+  LISTA_MARCA,
+  MARCA
 }

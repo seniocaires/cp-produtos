@@ -32,4 +32,12 @@ public interface PaginaServiceLocal {
    * @return {@link Pagina}
    */
   Pagina buscarPaginaListagemMarca();
+
+  /**
+   * Retorna a página do link passado por parâmetro.
+   * @author Senio Caires
+   * @param link - {@link String}
+   * @return {@link String}
+   */
+  Pagina buscarPorLink(String link);
 }

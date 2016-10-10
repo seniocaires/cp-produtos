@@ -9,6 +9,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -57,10 +58,33 @@ public class Pagina {
   private TipoPagina tipo;
 
   /**
+   * Html
+   * @author Senio Caires
+   */
+  private String html;
+
+  /**
    * Status.
    * @author Senio Caires
    */
   private Boolean ativa;
+
+  /**
+   * Contrutor.
+   * @author Senio Caires
+   */
+  public Pagina() {
+    // default
+  }
+
+  /**
+   * Contrutor.
+   * @author Senio Caires
+   * @param linkParametro {@link String}
+   */
+  public Pagina(String linkParametro) {
+    this.link = linkParametro;
+  }
 
   /**
    * Retorna o id.
@@ -154,6 +178,23 @@ public class Pagina {
    */
   public void setTipo(TipoPagina tipoParametro) {
     this.tipo = tipoParametro;
+  }
+
+  /**
+   * @author Senio Caires
+   * @return {@link String}
+   */
+  @Lob
+  public String getHtml() {
+    return html;
+  }
+
+  /**
+   * @author Senio Caires
+   * @param html
+   */
+  public void setHtml(String html) {
+    this.html = html;
   }
 
   /**

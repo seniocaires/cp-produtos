@@ -10,7 +10,14 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceContextType;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.persistence.metamodel.EntityType;
 
+import com.sporeon.baseutil.ConversaoUtil;
 import com.sporeon.framework.excecao.ValidacaoException;
 
 import dominio.Pagina;
@@ -84,4 +91,41 @@ public class PaginaService implements PaginaServiceLocal {
     return retorno;
   }
 
+  /**
+   * Retorna a página do link passado por parâmetro.
+   * @author Senio Caires
+   * @param link - {@link String}
+   * @return {@link String}
+   */
+  public Pagina buscarPorLink(String link) {
+
+    Pagina retorno;
+    TypedQuery<Pagina> query = null;
+    EntityType<Pagina> metamodelPagina;
+    CriteriaBuilder criteriaBuilder;
+    CriteriaQuery<Pagina> criteriaQuery;
+    Root<Pagina> root;
+    Predicate condicaoLink;
+
+    try {
+
+      metamodelPagina = entityManager.getMetamodel().entity(Pagina.class);
+      criteriaBuilder = entityManager.getCriteriaBuilder();
+      criteriaQuery = criteriaBuilder.createQuery(Pagina.class);
+      root = criteriaQuery.from(Pagina.class);
+      condicaoLink = criteriaBuilder.equal(criteriaBuilder.lower(root.get(metamodelPagina.getDeclaredSingularAttribute("link", String.class))), ConversaoUtil.nuloParaVazio(link).toLowerCase());
+      criteriaQuery.select(root).where(condicaoLink);
+      query = entityManager.createQuery(criteriaQuery);
+
+      retorno = (Pagina) query.getSingleResult();
+
+    } catch (NoResultException nre) {
+      retorno = null;
+    } catch (Exception e) {
+      e.printStackTrace();
+      retorno = null;
+    }
+
+    return retorno;
+  }
 }

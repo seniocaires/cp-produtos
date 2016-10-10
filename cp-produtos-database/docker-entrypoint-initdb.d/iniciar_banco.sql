@@ -6,6 +6,7 @@ CREATE TABLE `pagina` (
   `numero` int NOT NULL,
   `dataAtualizacao` datetime NOT NULL,
   `tipo` varchar(15) NOT NULL,
+  `html` text NULL,
   `ativa` char(1) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=latin1;
