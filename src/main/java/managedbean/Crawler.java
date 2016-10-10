@@ -23,9 +23,11 @@ import com.googlecode.htmlcompressor.compressor.HtmlCompressor;
 import com.sporeon.framework.excecao.ValidacaoException;
 
 import dominio.Pagina;
+import dominio.Produto;
 import enumeracao.TipoLog;
 import enumeracao.TipoPagina;
 import service.PaginaServiceLocal;
+import service.ProdutoServiceLocal;
 
 /**
  * Managedbean do crawler.
@@ -65,6 +67,13 @@ public class Crawler {
    */
   @EJB
   private PaginaServiceLocal paginaService;
+
+  /**
+   * EJB dos serviços de produto.
+   * @author Senio Caires
+   */
+  @EJB
+  private ProdutoServiceLocal produtoService;
 
   /**
    * Iniciar crawler e cleaner do log.
@@ -221,7 +230,7 @@ public class Crawler {
           }
         }
 
-        //        atualizarConteudo();
+        atualizarConteudo();
 
         Runtime.getRuntime().gc();
         induzirSleepCrawler();
@@ -237,6 +246,160 @@ public class Crawler {
       }
 
     } while (existePaginaListagemSeguinte);
+  }
+
+  /**
+   * Atualiza as marcas e os produtos.
+   * @author Senio Caires
+   */
+  public void atualizarConteudo() {
+
+    Document documentMarca;
+
+    for (Pagina pagina : paginaService.buscarAtivas(TipoPagina.MARCA)) {
+
+      adicionarLog(TipoLog.INFO, "Acessando pagina da marca: " + pagina.getLink());
+
+      try {
+        documentMarca = Jsoup.parse(pagina.getHtml(), "ISO-8859-1");
+      } catch (Exception e) {
+        try {
+          adicionarLog(TipoLog.WARNING, "Erro ao obter dados basicos da marca. Desativando pagina e seguindo para proxima pagina ativa.");
+          Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
+          pagina.setAtiva(Boolean.FALSE);
+          paginaService.salvar(pagina);
+        } catch (ValidacaoException ve) {
+          adicionarLog(TipoLog.ERROR, "Erro ao desativar pagina.");
+          Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
+        }
+        continue;
+      }
+
+      try {
+        pagina.setAtiva(Boolean.FALSE);
+        paginaService.salvar(pagina);
+      } catch (ValidacaoException e) {
+        adicionarLog(TipoLog.ERROR, "Erro ao desativar pagina.");
+        adicionarLog(TipoLog.ERROR, e.getMessage());
+        Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
+      }
+
+      salvarProdutos(documentMarca, pagina);
+
+      Runtime.getRuntime().gc();
+    }
+  }
+
+  /**
+   * Atualiza os produtos.
+   * @author Senio Caires
+   * @param documentMarca {@link Document}
+   * @param pagina {@link Pagina}
+   */
+  private void salvarProdutos(Document documentMarca, Pagina pagina) {
+
+    Element gradeProdutos;
+    Elements produtosHtml;
+    Produto produto;
+
+    try {
+
+      gradeProdutos = documentMarca.getElementById("tbl-produtos");
+
+      produtosHtml = gradeProdutos.getElementsByTag("li");
+
+    } catch (Exception e) {
+      adicionarLog(TipoLog.ERROR, "Erro ao procurar produtos.");
+      Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
+
+    for (Element produtoHtml : produtosHtml) {
+
+      try {
+
+        produto = produtoService.buscarPorLink(getLinkProduto(produtoHtml));
+        if (produto == null || produto.getId() == null) {
+          produto = new Produto(getLinkProduto(produtoHtml));
+        }
+
+        produto.setLink(getLinkProduto(produtoHtml));
+        produto.setNome(getNomeProduto(produtoHtml));
+        produto.setCodigoBarras(getCodigoBarrasProduto(produtoHtml));
+        produto.setAtivo(Boolean.TRUE);
+        produto.setDataAtualizacao(pagina.getDataAtualizacao());
+        adicionarLog(TipoLog.INFO, "Produto adicionado: " + produto.getNome() + " " + produto.getCodigoBarras() + " " + produto.getLink());
+        try {
+          produtoService.salvar(produto);
+        } catch (ValidacaoException e1) {
+          adicionarLog(TipoLog.ERROR, "Erro ao salvar produto.");
+          Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e1.getMessage(), e1);
+        }
+      } catch (Exception e) {
+        adicionarLog(TipoLog.WARNING, "Erro ao buscar produto. Buscando proximo produto.");
+        Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
+        produto = null;
+        continue;
+      }
+    }
+  }
+
+  /**
+   * Retorna o link do produto.
+   * @param produtoHtml
+   * @return {@link String}
+   */
+  private String getLinkProduto(Element produtoHtml) {
+
+    StringBuilder resultado = new StringBuilder();
+    try {
+      resultado.append("http://cosmos.bluesoft.com.br");
+      resultado.append(URLDecoder.decode(produtoHtml.getElementsByClass("picture").get(0).getElementsByTag("a").get(0).attr("href").trim(), "UTF-8"));
+    } catch (UnsupportedEncodingException e) {
+      adicionarLog(TipoLog.ERROR, "Erro no decode da url");
+      Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
+    } catch (Exception e) {
+      Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Erro ao recuperar link do produto. " + produtoHtml.html() + e.getMessage(), e);
+      resultado.append("");
+    }
+
+    return resultado.toString().toLowerCase();
+  }
+
+  /**
+   * Retorna o nome do produto.
+   * @param produtoHtml
+   * @return {@link String}
+   */
+  private String getNomeProduto(Element produtoHtml) {
+
+    StringBuilder resultado = new StringBuilder();
+    try {
+      resultado.append(produtoHtml.getElementsByClass("description").get(0).getElementsByTag("a").get(0).html().trim());
+    } catch (Exception e) {
+      Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Erro ao recuperar nome do produto. " + produtoHtml.html() + e.getMessage(), e);
+      resultado.append("");
+    }
+
+    return resultado.toString();
+  }
+
+  /**
+   * Retorna o código de barras do produto.
+   * @param produtoHtml
+   * @return {@link String}
+   */
+  private String getCodigoBarrasProduto(Element produtoHtml) {
+
+    StringBuilder resultado = new StringBuilder();
+    try {
+      resultado.append(produtoHtml.getElementsByClass("barcode").get(0).getElementsByTag("a").get(0).html().trim());
+    } catch (Exception e) {
+      Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Erro ao recuperar codigo de barras do produto. " + produtoHtml.html() + e.getMessage(), e);
+      resultado.append("");
+    }
+
+    return resultado.toString();
   }
 
   /**

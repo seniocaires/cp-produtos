@@ -1,8 +1,11 @@
 package service;
 
+import java.util.List;
+
 import com.sporeon.framework.excecao.ValidacaoException;
 
 import dominio.Pagina;
+import enumeracao.TipoPagina;
 
 /**
  * Interface para os serviços de Pagina.
@@ -40,4 +43,12 @@ public interface PaginaServiceLocal {
    * @return {@link String}
    */
   Pagina buscarPorLink(String link);
+
+  /**
+   * Retorna as páginas ativas.
+   * @author Senio Caires
+   * @param tipo {@link TipoPagina}
+   * @return {@link List}<{@linkPagina}>
+   */
+  List<Pagina> buscarAtivas(TipoPagina tipo);
 }
