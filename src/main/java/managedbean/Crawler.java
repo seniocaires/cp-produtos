@@ -155,8 +155,8 @@ public class Crawler {
   private void induzirSleepCrawler() {
     try {
       adicionarLog(TipoLog.INFO, "Induzindo sleep do crawler.");
-      //      Thread.sleep((60 * 1000) * 5);
-      Thread.sleep((5 * 1000) * 1);
+      Thread.sleep((60 * 1000) * 5);
+      //      Thread.sleep((5 * 1000) * 1);
     } catch (InterruptedException e) {
       adicionarLog(TipoLog.ERROR, e.getMessage());
       Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);

@@ -1,0 +1,8 @@
+# Exportar registros para json
+# Baixar o programa HeidiSQL http://www.heidisql.com/
+# Conectar na base de dados
+# Arquivo > Nova aba de consulta
+# Executar o SQL "select codigobarras,nome from produto"
+# Clicar com o direito no resultado da pesquisa > Exportar registros da lista
+# Indicar um arquivo existente ex:produtos.json
+# Marcar JSON e clicar em Ok. 
