@@ -32,6 +32,13 @@
         <p:commandButton actionListener="#{crawler.parar}" value="Parar" disabled="#{!crawler.crawlerRodando and crawler.cleanerRodando}" update="painel" />
       </h:panelGroup>
 
+      <h:panelGroup id="status">
+        <h:outputText value=" [Crawler RODANDO] " rendered="#{crawler.crawlerRodando}"/>
+        <h:outputText value=" [Crawler PARADO] " rendered="#{!crawler.crawlerRodando}"/>
+        <h:outputText value=" [Limpeza de log RODANDO] " rendered="#{crawler.cleanerRodando}"/>
+        <h:outputText value=" [Limpeza de log PARADA] " rendered="#{!crawler.cleanerRodando}"/>
+      </h:panelGroup>
+
       <div class="panel-body">
         <h:outputText id="log" value="#{crawler.logString}" escape="false"/>
         <p:poll interval="2" listener="#{crawler.stub}" update="log" />
